@@ -21,8 +21,6 @@ class Decorators(object):
             except aikabu.exceptions.SessionTimeoutException:
                 self.reset_session_token()
                 resp = func(self, *args, **kwargs)
-            except BaseException:
-                raise
 
             return resp
         return wrapper
