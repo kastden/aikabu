@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
+import aikabu.exceptions
 from aikabu.session import AikabuSession
-from aikabu.model import AikabuException
-
-
-class InvalidCodeException(AikabuException):
-    pass
 
 
 class Aikabu(object):
@@ -102,6 +98,10 @@ class Aikabu(object):
                 "trace": ""
             }
         }
+
+        resp = self.post(path, data)
+
+        return resp
 
 
 if __name__ == "__main__":

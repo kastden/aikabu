@@ -6,15 +6,7 @@ from functools import wraps
 
 import requests
 
-from aikabu.model import AikabuException
-
-
-class SessionTimeoutException(AikabuException):
-    pass
-
-
-class MaintenanceWindowException(AikabuException):
-    pass
+import aikabu.exceptions
 
 
 class Decorators(object):
@@ -26,7 +18,7 @@ class Decorators(object):
         def wrapper(self, *args, **kwargs):
             try:
                 resp = func(self, *args, **kwargs)
-            except SessionTimeoutException:
+            except aikabu.exceptions.SessionTimeoutException:
                 self.reset_session_token()
                 resp = func(self, *args, **kwargs)
             except BaseException:
@@ -40,9 +32,10 @@ class AikabuSession(object):
     _hosts = ["game0000.aikabu.net", "game0100.aikabu.net"]
     _platform_id = 2
     _app_version = "1.0.0"
+    _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-I9508 Build/KOT49H)"  # noqa E501
 
     headers = {
-        "User-Agent": "Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-I9508 Build/KOT49H)",
+        "User-Agent": _user_agent,
         "Accept": "*/*",
         "Content-Type": "application/json",
         "Accept-Language": "en-us",
@@ -107,10 +100,10 @@ class AikabuSession(object):
                 message = data['message']
 
                 if message == "session timeout":
-                    raise SessionTimeoutException
+                    raise aikabu.exceptions.SessionTimeoutException()
                 elif message == "Maintenance ON":
-                    raise MaintenanceWindowException(message)
+                    raise aikabu.exceptions.MaintenanceWindowException(message)
                 else:
-                    raise AikabuException(message)
+                    raise aikabu.exceptions.AikabuException(message)
         except ValueError:
             raise
