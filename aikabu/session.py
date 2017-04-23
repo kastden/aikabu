@@ -35,12 +35,16 @@ class AikabuSession(object):
             "app_version": "1.0.0",
             "platform_id": 2
         },
-        "iphone": {
+        "ios": {
             "user-agent": "aikabu/19 CFNetwork/808.3 Darwin/16.3.0",
             "app_version": "1.0.0",
-            "platform_id": "1"
+            "platform_id": 1
         }
     }
+
+    _platform_ids = {}
+    for platform in _platforms:
+        _platform_ids[_platforms[platform]["platform_id"]] = platform
 
     _headers_template = {
         "Accept": "*/*",
@@ -54,9 +58,12 @@ class AikabuSession(object):
     def __init__(self, account_token, platform, session_token=False):
         self.account_token = account_token
 
-        if platform not in self._platforms.keys():
+        if isinstance(platform, int):
+            self.platform = self._platform_ids[platform]
+        elif platform not in self._platforms.keys():
             raise ValueError("Invalid platform {}".format(platform))
-        self.platform = platform
+        else:
+            self.platform = platform
 
         self.requests = requests.Session()
         self._update_headers()
@@ -134,3 +141,6 @@ class AikabuSession(object):
                     raise aikabu.exceptions.AikabuException(message)
         except ValueError:
             raise
+
+if __name__ == "__main__":
+    pass
