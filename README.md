@@ -17,8 +17,9 @@ I found one mine by using [Fiddler](http://www.telerik.com/fiddler).
 ```python  
 from aikabu import Aikabu
 
-account_token = "abc123"  
-akb = Aikabu(account_token)  
+account_token = "abc123"
+platform = "android"  # or "iphone"
+akb = Aikabu(account_token, platform)
 print(akb.stock_summaries())  
 
 ```

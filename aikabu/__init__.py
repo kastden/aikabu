@@ -5,8 +5,12 @@ from aikabu.session import AikabuSession
 
 
 class Aikabu(object):
-    def __init__(self, account_token, session_token=False):
-        self.session = AikabuSession(account_token,
+    def __init__(self, account_token, platform, session_token=False):
+        self.account_token = account_token
+        self.platform = platform
+
+        self.session = AikabuSession(self.account_token,
+                                     self.platform,
                                      session_token=session_token)
 
     def post(self, *args, **kwargs):
@@ -14,7 +18,9 @@ class Aikabu(object):
 
     def stock_summaries(self, codes=None):
         """Get a summary of all the requested stocks.
-        Default behaviour is to request the summary of all the listed stocks."""
+
+        Default behaviour is to request the summary of all
+        the listed stocks."""
         path = "stock/summaries"
 
         if not codes:
@@ -121,7 +127,7 @@ class Aikabu(object):
         path = "presentbox/get"
 
         data = {
-            "data" : {
+            "data": {
                 "page": page,
                 "limit": limit,
                 "trace": ""
@@ -144,8 +150,8 @@ class Aikabu(object):
         data = {
             "data": {
                 "ids": ids,
-                "trace":""}
-            }
+                "trace": ""}
+        }
 
         resp = self.post(path, data)
 

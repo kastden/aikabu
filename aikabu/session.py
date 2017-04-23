@@ -28,12 +28,21 @@ class Decorators(object):
 
 class AikabuSession(object):
     _hosts = ["game0000.aikabu.net", "game0100.aikabu.net"]
-    _platform_id = 2
-    _app_version = "1.0.0"
-    _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-I9508 Build/KOT49H)"  # noqa E501
 
-    headers = {
-        "User-Agent": _user_agent,
+    _platforms = {
+        "android": {
+            "user-agent": "Dalvik/1.6.0 (Linux; U; Android 4.4.2; GT-I9508 Build/KOT49H)",  # noqa E501,
+            "app_version": "1.0.0",
+            "platform_id": 2
+        },
+        "iphone": {
+            "user-agent": "aikabu/19 CFNetwork/808.3 Darwin/16.3.0",
+            "app_version": "1.0.0",
+            "platform_id": "1"
+        }
+    }
+
+    _headers_template = {
         "Accept": "*/*",
         "Content-Type": "application/json",
         "Accept-Language": "en-us",
@@ -42,25 +51,41 @@ class AikabuSession(object):
 
     session_token = None
 
-    def __init__(self, account_token, session_token=False):
-        self.requests = requests.Session()
-        self.requests.headers.update(self.headers)
-
+    def __init__(self, account_token, platform, session_token=False):
         self.account_token = account_token
+
+        if platform not in self._platforms.keys():
+            raise ValueError("Invalid platform {}".format(platform))
+        self.platform = platform
+
+        self.requests = requests.Session()
+        self._update_headers()
 
         if session_token:
             self.session_token = session_token
         else:
             self.reset_session_token()
 
+    def _update_headers(self):
+        """Sets the correct headers for the Requests Session."""
+        headers = dict(self._headers_template)
+        headers["User-Agent"] = self._platforms[self.platform]["user-agent"]
+
+        return self.requests.headers.update(headers)
+
     def reset_session_token(self):
+        """Requests a new session_token."""
+
         path = "auth/login"
+
+        platform_id = self._platforms[self.platform]["platform_id"]
+        app_version = self._platforms[self.platform]["app_version"]
 
         data = {
             "data": {
                 "account_token": self.account_token,
-                "platform_id": self._platform_id,
-                "app_version": self._app_version,
+                "platform_id": platform_id,
+                "app_version": app_version,
                 "trace": "",
             }
         }
@@ -71,11 +96,15 @@ class AikabuSession(object):
 
     @property
     def baseurl(self):
+        """Creates a base URL using a random host, just
+        like the app."""
         host = random.choice(self._hosts)
         return "https://{}/api_server".format(host)
 
     @Decorators.retry_on_session_timeout
     def post(self, path, data, skip_session_token=False):
+        """Perform a POST request to a AiKaBu endpoint,
+        with a payload."""
         url = "{}/{}".format(self.baseurl, path)
 
         if not skip_session_token:
