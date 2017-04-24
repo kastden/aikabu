@@ -24,8 +24,7 @@ class Aikabu(object):
         path = "stock/summaries"
 
         if not codes:
-            stocks = self.get_stocks()
-            codes = [s["stock_code"] for s in stocks]
+            codes = self.get_stocks(return_codes_only=True)
 
         data = {
             "data": {
@@ -39,8 +38,9 @@ class Aikabu(object):
 
         return resp["stocks"]
 
-    def get_stocks(self):
+    def get_stocks(self, return_codes_only=False):
         """Returns a list of all the stocks traded on the exchange."""
+
         path = "delistedstock/get"
 
         data = {
@@ -52,12 +52,41 @@ class Aikabu(object):
 
         resp = self.post(path, data)
 
+        if return_codes_only:
+            codes = [s["stock_code"] for s in resp]
+            return codes
+
         return resp
 
-    def get_player_info(self):
-        """Returns information about the account you're authorized with.
+    def get_stock_data(self, stock_codes=[]):
+        """Get the full company/player profile for a stock.
 
-        Information like your user id, level, holdings, etc."""
+        If stock_codes is None/[] the full profile on all stocks
+        in the game will be requested."""
+
+        path = 'stock/get'
+
+        if isinstance(stock_codes, str):
+            stock_codes = [stock_codes]
+
+        if not stock_codes:
+            stock_codes = self.get_stocks(return_codes_only=True)
+
+        data = {
+            "data": {
+                "codes": stock_codes,
+                "fields": ["trend", "market_value_ranking_history",
+                           "dividend_rate", "previous_dividend",
+                           "reserve_diamond"],
+                "trace": ""}
+        }
+
+        resp = self.post(path, data)
+
+        return resp["stocks"]
+
+    def get_player_info(self):
+        """Returns information about the account you're authorized with."""
         path = "player/get"
 
         data = {
@@ -73,7 +102,8 @@ class Aikabu(object):
         return resp
 
     def stock_holdings(self, page=0):
-        # Don't know what this does
+        """Returns the stocks you currently own ordered by the
+        buy orders."""
         path = "stock/holdings"
 
         data = {
@@ -105,9 +135,8 @@ class Aikabu(object):
         return resp
 
     def stock_exchange(self, index=0):
-        """Returns information about the stock exchange.
+        """Returns information about the stock exchange."""
 
-        Information like index value etc."""
         path = "stock/exchange"
 
         data = {
@@ -138,7 +167,7 @@ class Aikabu(object):
 
         return resp
 
-    def presentbox_receive(self, ids=None):
+    def presentbox_receive(self, ids=[]):
         """Receive gifts, ids is a list with present ids."""
 
         path = "presentbox/receive"
