@@ -142,5 +142,6 @@ class AikabuSession(object):
         except ValueError:
             raise
 
+
 if __name__ == "__main__":
     pass
